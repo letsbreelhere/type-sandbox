@@ -14,7 +14,7 @@ hacked together.
 
 TODO:
 
-- [] Use a saner definition for "freshen-able" type names; the enum
+- [ ] Use a saner definition for "freshen-able" type names; the enum
   definition that exists now is borderline unusable for longer names.
-- [] Ensure capture avoidance works as expected at the type level as well
+- [ ] Ensure capture avoidance works as expected at the type level as well
   as the term level in `F_ω` etc.
