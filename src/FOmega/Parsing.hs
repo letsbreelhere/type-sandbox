@@ -8,7 +8,6 @@ import Types.Name
 import Text.Megaparsec hiding (space)
 import Text.Megaparsec.Expr
 import Text.Megaparsec.String
-import Text.Megaparsec.Combinator
 import qualified Text.Megaparsec.Lexer as Lex
 
 space :: Parser ()
@@ -35,15 +34,22 @@ name = fmap fromString . lexeme $ some lowerChar
 capName :: Parser CapName
 capName = fmap fromString . lexeme $ some upperChar
 
+kindTable :: [[Operator Parser Kind]]
 kindTable = [ [ infixR "->" KArr ] ]
+
+typeTable :: [[Operator Parser (LamType CapName)]]
 typeTable = [ [ infixR "->" TArr ] ]
+
+termTable :: [[Operator Parser (Lam CapName Name)]]
 termTable = [ [ InfixL (App <$ space) ] ]
 
-infixL name f = InfixL (f <$ keyword name)
-infixR name f = InfixR (f <$ keyword name)
+infixR :: String -> (a -> a -> a) -> Operator Parser a
+infixR k f = InfixR (f <$ keyword k)
 
+termParser :: Parser (Lam CapName Name)
 termParser = makeExprParser termInner termTable
 
+termInner :: Parser (Lam CapName Name)
 termInner = do
   t <- termInner'
   appTy <- optional $ keyword "[" *> typeParser <* keyword "]"
@@ -53,17 +59,18 @@ termInner = do
 
 termInner' :: Parser (Lam CapName Name)
 termInner' =
-      lambda
-  <|> bind
-  <|> Bool True <$ keyword "true"
-  <|> Bool False <$ keyword "false"
-  <|> Unit <$ keyword "unit"
-  <|> keyword "fst" *> fmap PairFirst termInner'
-  <|> keyword "snd" *> fmap PairSecond termInner'
-  <|> pair
-  <|> Var <$> name
-  <|> parens termParser
+  lambda <|>
+  bind <|>
+  Bool True <$ keyword "true" <|>
+  Bool False <$ keyword "false" <|>
+  Unit <$ keyword "unit" <|>
+  keyword "fst" *> fmap PairFirst termParser <|>
+  keyword "snd" *> fmap PairSecond termParser <|>
+  pair <|>
+  Var <$> name <|>
+  parens termParser
 
+pair :: Parser (Lam CapName Name)
 pair = do
   keyword "<"
   l <- termParser
@@ -72,6 +79,7 @@ pair = do
   keyword ">"
   pure (MkPair l r)
 
+bind :: Parser (Lam CapName Name)
 bind = do
   keyword "bind"
   tvs <- sepBy1 tvWithSig (keyword ",")
@@ -94,11 +102,7 @@ lambda = do
   body <- termParser
   pure $ foldr (\(v, ty) e -> Abs v ty e) body vars
 
-app :: Parser (Lam CapName Name)
-app = do
-  keyword "`"
-  App <$> termParser <*> termParser
-
+kindParser :: Parser Kind
 kindParser = makeExprParser (Proper <$ keyword "*" <|> parens kindParser) kindTable <?> "kind signature"
 
 typeParser :: Parser (LamType CapName)
@@ -106,12 +110,13 @@ typeParser = makeExprParser typeInner typeTable <?> "expression"
 
 typeInner :: Parser (LamType CapName)
 typeInner =
-      BoolTy <$ keyword "bool"
-  <|> UnitTy <$ keyword "unit"
-  <|> forAll
-  <|> TVar <$> capName
-  <|> parens typeParser
+  BoolTy <$ keyword "bool" <|>
+  UnitTy <$ keyword "unit" <|>
+  forAll <|>
+  TVar <$> capName <|>
+  parens typeParser
 
+tvWithSig :: Parser (CapName, Kind)
 tvWithSig = do
   tv <- capName
   keyword "::"
@@ -125,9 +130,3 @@ forAll = do
   keyword "."
   ty <- typeParser
   pure $ foldr (\(tv, k) acc -> Forall tv k acc) ty tvs
-
-tArr = do
-  l <- typeParser
-  keyword "->"
-  r <- typeParser
-  pure (TArr l r)
