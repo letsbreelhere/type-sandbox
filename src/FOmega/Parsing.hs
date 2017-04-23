@@ -35,24 +35,42 @@ name = fmap fromString . lexeme $ some lowerChar
 capName :: Parser CapName
 capName = fmap fromString . lexeme $ some upperChar
 
-termParser :: Parser (Lam CapName Name)
-termParser =
+kindTable = [ [ infixR "->" KArr ] ]
+typeTable = [ [ infixR "->" TArr ] ]
+termTable = [ [ InfixL (App <$ space) ] ]
+
+infixL name f = InfixL (f <$ keyword name)
+infixR name f = InfixR (f <$ keyword name)
+
+termParser = makeExprParser termInner termTable
+
+termInner = do
+  t <- termInner'
+  appTy <- optional $ keyword "[" *> typeParser <* keyword "]"
+  case appTy of
+    Nothing -> pure t
+    Just ty -> pure (AppTy t ty)
+
+termInner' :: Parser (Lam CapName Name)
+termInner' =
       lambda
-  <|> app
   <|> bind
   <|> Bool True <$ keyword "true"
   <|> Bool False <$ keyword "false"
-  <|> appTy
+  <|> Unit <$ keyword "unit"
+  <|> keyword "fst" *> fmap PairFirst termInner'
+  <|> keyword "snd" *> fmap PairSecond termInner'
+  <|> pair
   <|> Var <$> name
   <|> parens termParser
 
-appTy = do
-  keyword "app"
-  e <- termParser
-  keyword "["
-  ty <- typeParser
-  keyword "]"
-  pure (AppTy e ty)
+pair = do
+  keyword "<"
+  l <- termParser
+  keyword ","
+  r <- termParser
+  keyword ">"
+  pure (MkPair l r)
 
 bind = do
   keyword "bind"
@@ -81,16 +99,10 @@ app = do
   keyword "`"
   App <$> termParser <*> termParser
 
-kindTable = [ [ infixR "->" KArr ] ]
-table = [ [ infixR "->" TArr ] ]
-
-infixL name f = InfixL (f <$ keyword name)
-infixR name f = InfixR (f <$ keyword name)
-
 kindParser = makeExprParser (Proper <$ keyword "*" <|> parens kindParser) kindTable <?> "kind signature"
 
 typeParser :: Parser (LamType CapName)
-typeParser = makeExprParser typeInner table <?> "expression"
+typeParser = makeExprParser typeInner typeTable <?> "expression"
 
 typeInner :: Parser (LamType CapName)
 typeInner =
