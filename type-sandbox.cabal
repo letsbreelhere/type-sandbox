@@ -17,9 +17,11 @@ cabal-version:  >= 1.10
 extra-source-files:
     README.md
 
-library
+executable fomega
+  main-is: FOmega/Repl.hs
   hs-source-dirs:
       src
+    , app
   default-extensions: DeriveFunctor DeriveFoldable DeriveTraversable LambdaCase PatternSynonyms OverloadedStrings NamedFieldPuns ConstraintKinds
   ghc-options: -Wall
   build-depends:
@@ -30,15 +32,15 @@ library
     , megaparsec
     , text
     , containers
-  exposed-modules:
+  other-modules:
       FOmega.Eval
       FOmega.Examples
+      FOmega.Parsing
       FOmega.TypeCheck
       FOmega.Types
       FOmega.Util
       LambdaOmega.TypeCheck
       LambdaOmega.Types
-      Main
       SimplyTyped.Eval
       SimplyTyped.TypeCheck
       SimplyTyped.Types
