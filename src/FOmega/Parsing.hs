@@ -41,7 +41,7 @@ typeTable :: [[Operator Parser (LamType CapName)]]
 typeTable = [ [ infixR "->" TArr ] ]
 
 termTable :: [[Operator Parser (Lam CapName Name)]]
-termTable = [ [ InfixL (App <$ space) ] ]
+termTable = [ [ Postfix (PairFirst <$ keyword ".1"), Postfix (PairSecond <$ keyword ".2"), InfixL (App <$ space) ] ]
 
 infixR :: String -> (a -> a -> a) -> Operator Parser a
 infixR k f = InfixR (f <$ keyword k)
@@ -64,9 +64,10 @@ termInner' =
   Bool True <$ keyword "true" <|>
   Bool False <$ keyword "false" <|>
   Unit <$ keyword "unit" <|>
-  keyword "fst" *> fmap PairFirst termParser <|>
   keyword "snd" *> fmap PairSecond termParser <|>
   pair <|>
+  impl <|>
+  useEx <|>
   Var <$> name <|>
   parens termParser
 
@@ -86,6 +87,33 @@ bind = do
   keyword "."
   body <- termParser
   pure $ foldr (\(tv, k) e -> AbsTy tv k e) body tvs
+
+impl :: Parser (Lam CapName Name)
+impl = do
+  keyword "{*"
+  ty <- typeParser
+  keyword ","
+  l <- termParser
+  keyword "}"
+  keyword "as"
+  (tv, kind) <- tvWithSig
+  keyword "."
+  ty' <- typeParser
+  pure (ImplEx ty l tv kind ty')
+
+useEx :: Parser (Lam CapName Name)
+useEx = do
+  keyword "let"
+  keyword "{"
+  tv <- capName
+  keyword ","
+  v <- name
+  keyword "}"
+  keyword "="
+  implTerm <- termParser
+  keyword "->"
+  inTerm <- termParser
+  pure (UseEx tv v implTerm inTerm)
 
 termSig :: Parser (Name, LamType CapName)
 termSig = do
@@ -112,9 +140,20 @@ typeInner :: Parser (LamType CapName)
 typeInner =
   BoolTy <$ keyword "bool" <|>
   UnitTy <$ keyword "unit" <|>
+  pairType <|>
   forAll <|>
+  exists <|>
   TVar <$> capName <|>
   parens typeParser
+
+pairType :: Parser (LamType CapName)
+pairType = do
+  keyword "<"
+  l <- typeParser
+  keyword ","
+  r <- typeParser
+  keyword ">"
+  pure $ Pair l r
 
 tvWithSig :: Parser (CapName, Kind)
 tvWithSig = do
@@ -130,3 +169,11 @@ forAll = do
   keyword "."
   ty <- typeParser
   pure $ foldr (\(tv, k) acc -> Forall tv k acc) ty tvs
+
+exists :: Parser (LamType CapName)
+exists = do
+  keyword "exists"
+  tvs <- sepBy1 tvWithSig (keyword ",")
+  keyword "."
+  body <- typeParser
+  pure $ foldr (\(tv, k) ty -> Exists tv k ty) body tvs

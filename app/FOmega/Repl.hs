@@ -9,5 +9,4 @@ main :: IO ()
 main = repl "ω> " $ \input -> pure . either id id $ do
   parsed <- parseTerm input
   ty <- typeCheck [] [] parsed
-  let down = eval parsed
-  pure $ show down ++ " has type " ++ show ty
+  pure $ show (eval parsed) ++ " has type " ++ show ty
