@@ -38,7 +38,9 @@ kindTable :: [[Operator Parser Kind]]
 kindTable = [ [ infixR "->" KArr ] ]
 
 typeTable :: [[Operator Parser (LamType CapName)]]
-typeTable = [ [ infixR "->" TArr ] ]
+typeTable = [ [ InfixL (KApp <$ space) ]
+            , [ infixR "->" TArr ]
+            ]
 
 termTable :: [[Operator Parser (Lam CapName Name)]]
 termTable = [ [ Postfix (PairFirst <$ keyword ".1"), Postfix (PairSecond <$ keyword ".2"), InfixL (App <$ space) ] ]
@@ -143,6 +145,7 @@ typeInner =
   pairType <|>
   forAll <|>
   exists <|>
+  kLam <|>
   TVar <$> capName <|>
   parens typeParser
 
@@ -161,6 +164,14 @@ tvWithSig = do
   keyword "::"
   k <- kindParser
   pure (tv, k)
+
+kLam :: Parser (LamType CapName)
+kLam = do
+  keyword "with"
+  tvs <- sepBy1 tvWithSig (keyword ",")
+  keyword "."
+  ty <- typeParser
+  pure $ foldr (\(tv, k) acc -> KLam tv k acc) ty tvs
 
 forAll :: Parser (LamType CapName)
 forAll = do
