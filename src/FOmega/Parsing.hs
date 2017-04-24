@@ -54,10 +54,8 @@ termParser = makeExprParser termInner termTable
 termInner :: Parser (Lam CapName Name)
 termInner = do
   t <- termInner'
-  appTy <- optional $ keyword "[" *> typeParser <* keyword "]"
-  case appTy of
-    Nothing -> pure t
-    Just ty -> pure (AppTy t ty)
+  appTy <- many $ keyword "[" *> typeParser <* keyword "]"
+  pure $ foldr (flip AppTy) t appTy
 
 termInner' :: Parser (Lam CapName Name)
 termInner' =
