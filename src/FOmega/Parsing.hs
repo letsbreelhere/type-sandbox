@@ -19,6 +19,12 @@ keyword k = void (lexeme (string k) <?> show k)
 lexeme :: Parser a -> Parser a
 lexeme = Lex.lexeme space
 
+comma :: Parser ()
+comma = keyword ","
+
+dot :: Parser ()
+dot = keyword "."
+
 parens :: Parser a -> Parser a
 parens p = keyword "(" *> p <* keyword ")"
 
@@ -75,7 +81,7 @@ pair :: Parser (Lam CapName Name)
 pair = do
   keyword "<"
   l <- termParser
-  keyword ","
+  comma
   r <- termParser
   keyword ">"
   pure (MkPair l r)
@@ -83,8 +89,8 @@ pair = do
 bind :: Parser (Lam CapName Name)
 bind = do
   keyword "bind"
-  tvs <- sepBy1 tvWithSig (keyword ",")
-  keyword "."
+  tvs <- sepBy1 tvWithSig comma
+  dot
   body <- termParser
   pure $ foldr (\(tv, k) e -> AbsTy tv k e) body tvs
 
@@ -92,12 +98,12 @@ impl :: Parser (Lam CapName Name)
 impl = do
   keyword "{*"
   ty <- typeParser
-  keyword ","
+  comma
   l <- termParser
   keyword "}"
   keyword "as"
   (tv, kind) <- tvWithSig
-  keyword "."
+  dot
   ty' <- typeParser
   pure (ImplEx ty l tv kind ty')
 
@@ -106,7 +112,7 @@ useEx = do
   keyword "let"
   keyword "{"
   tv <- capName
-  keyword ","
+  comma
   v <- name
   keyword "}"
   keyword "="
@@ -125,8 +131,8 @@ termSig = do
 lambda :: Parser (Lam CapName Name)
 lambda = do
   keyword "lambda"
-  vars <- sepBy1 termSig (keyword ",")
-  keyword "."
+  vars <- sepBy1 termSig comma
+  dot
   body <- termParser
   pure $ foldr (\(v, ty) e -> Abs v ty e) body vars
 
@@ -151,7 +157,7 @@ pairType :: Parser (LamType CapName)
 pairType = do
   keyword "<"
   l <- typeParser
-  keyword ","
+  comma
   r <- typeParser
   keyword ">"
   pure $ Pair l r
@@ -163,26 +169,20 @@ tvWithSig = do
   k <- kindParser
   pure (tv, k)
 
-kLam :: Parser (LamType CapName)
-kLam = do
-  keyword "with"
-  tvs <- sepBy1 tvWithSig (keyword ",")
-  keyword "."
+tvBinder :: String -> Parser [(CapName, Kind)]
+tvBinder kw = keyword kw *> sepBy1 tvWithSig comma <* dot
+
+typeAbstraction :: String -> (CapName -> Kind -> LamType CapName -> LamType CapName) -> Parser (LamType CapName)
+typeAbstraction kw q = do
+  tvs <- tvBinder kw
   ty <- typeParser
-  pure $ foldr (\(tv, k) acc -> KLam tv k acc) ty tvs
+  pure $ foldr (\(tv, k) acc -> q tv k acc) ty tvs
+
+kLam :: Parser (LamType CapName)
+kLam = typeAbstraction "with" KLam
 
 forAll :: Parser (LamType CapName)
-forAll = do
-  keyword "forall"
-  tvs <- sepBy1 tvWithSig (keyword ",")
-  keyword "."
-  ty <- typeParser
-  pure $ foldr (\(tv, k) acc -> Forall tv k acc) ty tvs
+forAll = typeAbstraction "forall" Forall
 
 exists :: Parser (LamType CapName)
-exists = do
-  keyword "exists"
-  tvs <- sepBy1 tvWithSig (keyword ",")
-  keyword "."
-  body <- typeParser
-  pure $ foldr (\(tv, k) ty -> Exists tv k ty) body tvs
+exists = typeAbstraction "exists" Exists
