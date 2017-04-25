@@ -49,7 +49,8 @@ typeTable = [ [ InfixL (KApp <$ space) ]
             ]
 
 termTable :: [[Operator Parser (Lam CapName Name)]]
-termTable = [ [ Postfix (PairFirst <$ keyword ".1"), Postfix (PairSecond <$ keyword ".2"), InfixL (App <$ space) ] ]
+termTable = [ [ Postfix (PairFirst <$ keyword ".1"), Postfix (PairSecond <$ keyword ".2"), InfixL (App <$ space), Postfix (flip AppTy <$> appTy) ] ]
+  where appTy = keyword "[" *> typeParser <* keyword "]"
 
 infixR :: String -> (a -> a -> a) -> Operator Parser a
 infixR k f = InfixR (f <$ keyword k)
@@ -58,13 +59,7 @@ termParser :: Parser (Lam CapName Name)
 termParser = makeExprParser termInner termTable
 
 termInner :: Parser (Lam CapName Name)
-termInner = do
-  t <- termInner'
-  appTy <- many $ keyword "[" *> typeParser <* keyword "]"
-  pure $ foldr (flip AppTy) t appTy
-
-termInner' :: Parser (Lam CapName Name)
-termInner' =
+termInner =
   lambda <|>
   bind <|>
   Bool True <$ keyword "true" <|>
