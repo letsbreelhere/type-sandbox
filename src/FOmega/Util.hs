@@ -41,9 +41,9 @@ substitute (x, r) root = case root of
   MkPair one two -> MkPair (substitute (x,r) one) (substitute (x,r) two)
   PairFirst e -> PairFirst (substitute (x,r) e)
   PairSecond e -> PairSecond (substitute (x,r) e)
-  ImplEx {implType, implTerm, exTv, exKind, exType} ->
+  ImplEx {implType, implTerm, exType} ->
     let implTerm' = substitute (x, r) implTerm
-     in ImplEx implType implTerm' exTv exKind exType
+     in ImplEx implType implTerm' exType
   UseEx {letTv, letVar, letTerm, inTerm}
     | x == letVar -> root
     | otherwise -> let letTerm' = substitute (x, r) letTerm
@@ -78,22 +78,22 @@ applyTVar root p@(tv', ty') = case root of
                in q fresh kind (applyTVar ty'' (tv', ty'))
 
 applyTVarInTerm :: Variable tv => Lam tv a -> (tv, LamType tv) -> Lam tv a
-applyTVarInTerm root pr = case root of
+applyTVarInTerm root pr@(tv', _) = case root of
   Var _ -> root
   Bool _ -> root
   Unit -> root
   App s t -> App (applyTVarInTerm s pr) (applyTVarInTerm t pr)
   Abs x ty t -> Abs x (applyTVar ty pr) (applyTVarInTerm t pr)
   AbsTy tv k e
-    | tv == fst pr -> AbsTy tv k e
+    | tv == tv' -> AbsTy tv k e
     | otherwise -> AbsTy tv k (applyTVarInTerm e pr)
   AppTy e ty -> AppTy (applyTVarInTerm e pr) (applyTVar ty pr)
   MkPair one two -> MkPair (applyTVarInTerm one pr) (applyTVarInTerm two pr)
   PairFirst e -> PairFirst (applyTVarInTerm  e pr)
   PairSecond e -> PairSecond (applyTVarInTerm e pr)
-  ImplEx{implType, implTerm, exTv, exKind, exType}
+  ImplEx{exType = Exists exTv _ _}
     | exTv == fst pr -> root
-    | otherwise -> ImplEx (applyTVar implType pr) (applyTVarInTerm implTerm pr) exTv exKind (applyTVar exType pr)
+  ImplEx{implType, implTerm, exType} -> ImplEx (applyTVar implType pr) (applyTVarInTerm implTerm pr) (applyTVar exType pr)
   UseEx{letTv, letVar, letTerm, inTerm}
     | letTv == fst pr -> root
     | otherwise -> UseEx letTv letVar (applyTVarInTerm letTerm pr) (applyTVarInTerm inTerm pr)

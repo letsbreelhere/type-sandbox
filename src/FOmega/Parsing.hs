@@ -102,10 +102,8 @@ impl = do
   l <- termParser
   keyword "}"
   keyword "as"
-  (tv, kind) <- tvWithSig
-  dot
   ty' <- typeParser
-  pure (ImplEx ty l tv kind ty')
+  pure (ImplEx ty l ty')
 
 useEx :: Parser (Lam CapName Name)
 useEx = do

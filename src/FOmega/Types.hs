@@ -17,8 +17,6 @@ data Lam tv a
   | ImplEx
       { implType :: LamType tv
       , implTerm :: Lam tv a
-      , exTv :: tv
-      , exKind :: Kind
       , exType :: LamType tv
       }
   | MkPair (Lam tv a) (Lam tv a)
@@ -90,7 +88,7 @@ instance (Show tv, Show a) => Show (Lam tv a) where
     shows letTerm .
     showString " in " .
     shows inTerm
-  showsPrec _ (ImplEx ty l tv kind ty') = showString "{*" . shows ty . showString "," . shows l . showString "} as " . shows (Exists tv kind ty')
+  showsPrec _ (ImplEx ty l ty') = showString "{*" . shows ty . showString "," . shows l . showString "} as " . shows ty'
   showsPrec _ (MkPair l r) = showString "⟨" . shows l . showString ", " . shows r . showString "⟩"
   showsPrec d (PairFirst l)  = showParen (d > appPrec) $ showString "fst " . showsPrec (appPrec + 1) l
   showsPrec d (PairSecond l) = showParen (d > appPrec) $ showString "snd " . showsPrec (appPrec + 1) l

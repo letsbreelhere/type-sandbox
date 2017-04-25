@@ -32,11 +32,15 @@ typeCheck kCxt cxt = \case
     case evalType exprType of
       Forall tv _ generalType -> pure (generalType `applyTVar` (tv, ty))
       _ -> Left $ "Can't apply type to non-universal " ++ show (evalType exprType)
-  ImplEx {implType, implTerm, exTv, exKind, exType} -> do
-    let substType = exType `applyTVar` (exTv, implType)
-    implTermType <- typeCheck ((exTv, exKind):kCxt) cxt implTerm
-    guard (substType `equiv` implTermType) $ "Existential impl type didn't match: expected " ++ show (evalType substType) ++ " but got " ++ show (evalType implTermType)
-    pure (Exists exTv exKind exType)
+  ImplEx {implType, implTerm, exType} ->
+    let exType' = evalType exType in
+    case exType' of
+      Exists exTv exKind exTy -> do
+        let substType = exTy `applyTVar` (exTv, implType)
+        implTermType <- typeCheck ((exTv, exKind):kCxt) cxt implTerm
+        guard (substType `equiv` implTermType) $ "Existential impl type didn't match: expected " ++ show (evalType substType) ++ " but got " ++ show (evalType implTermType)
+        pure exType'
+      _ -> Left $ "Pack type wasn't existential: " ++ show exType'
   UseEx {letTv, letVar, letTerm, inTerm} -> do
     letTermType <- typeCheck kCxt cxt letTerm
     case evalType letTermType of

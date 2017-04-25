@@ -25,7 +25,10 @@ eval root = case root of
   ImplEx{} -> root
   UseEx{letTv, letVar, letTerm, inTerm} ->
     case eval letTerm of
-      ImplEx{implType, implTerm, exTv, exKind=_, exType=_} ->
-        let implType' = rename implType (exTv, letTv)
-         in eval $ substitute (letVar, implTerm) (applyTVarInTerm inTerm (letTv, implType'))
+      ImplEx{implType, implTerm, exType} ->
+        case evalType exType of
+          Exists exTv _ _ ->
+            let implType' = rename implType (exTv, letTv)
+             in eval $ substitute (letVar, implTerm) (applyTVarInTerm inTerm (letTv, implType'))
+          _ -> error "Received non-existential type in pack"
       _ -> error "Received non-implementation term in unpack"
