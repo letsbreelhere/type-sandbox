@@ -36,3 +36,8 @@ executables:
       - src
       - app
     main: FOmega/Repl.hs
+  pi-repl:
+    source-dirs:
+      - src
+      - app
+    main: Dependent/Repl.hs

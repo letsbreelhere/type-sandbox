@@ -33,6 +33,7 @@ executable fomega
     , text
     , containers
   other-modules:
+      Dependent.Parsing
       Dependent.TypeCheck
       Dependent.Types
       FOmega.Eval
@@ -55,4 +56,47 @@ executable fomega
       Untyped.Eval
       Untyped.Types
       Util.Repl
+      Dependent.Repl
+  default-language: Haskell2010
+
+executable pi-repl
+  main-is: Dependent/Repl.hs
+  hs-source-dirs:
+      src
+    , app
+  default-extensions: DeriveFunctor DeriveFoldable DeriveTraversable LambdaCase PatternSynonyms OverloadedStrings NamedFieldPuns ConstraintKinds
+  ghc-options: -Wall
+  build-depends:
+      base >= 4.7 && < 5
+    , free
+    , recursion-schemes
+    , haskeline
+    , megaparsec
+    , text
+    , containers
+  other-modules:
+      Dependent.Parsing
+      Dependent.TypeCheck
+      Dependent.Types
+      FOmega.Eval
+      FOmega.Examples
+      FOmega.Parsing
+      FOmega.TypeCheck
+      FOmega.Types
+      FOmega.Util
+      LambdaOmega.TypeCheck
+      LambdaOmega.Types
+      SimplyTyped.Eval
+      SimplyTyped.TypeCheck
+      SimplyTyped.Types
+      SystemF.Eval
+      SystemF.Examples
+      SystemF.TypeCheck
+      SystemF.Types
+      Types.Name
+      Types.Variable
+      Untyped.Eval
+      Untyped.Types
+      Util.Repl
+      FOmega.Repl
   default-language: Haskell2010
