@@ -1,5 +1,6 @@
 module FOmega.Examples where
 
+{-
 import FOmega.Types
 import Types.Name
 
@@ -78,3 +79,4 @@ pairUse =
   , letTerm = pairImpl
   , inTerm = usedFirst `App` madePair
   }
+-}

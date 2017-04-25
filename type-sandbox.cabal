@@ -33,6 +33,8 @@ executable fomega
     , text
     , containers
   other-modules:
+      Dependent.TypeCheck
+      Dependent.Types
       FOmega.Eval
       FOmega.Examples
       FOmega.Parsing
