@@ -1,4 +1,4 @@
-module Dependent.Parsing where
+module Dependent.Parsing (parseCommand, Command(..)) where
 
 import Control.Arrow (left)
 import Control.Monad
@@ -9,6 +9,41 @@ import Text.Megaparsec hiding (space)
 import Text.Megaparsec.Expr
 import Text.Megaparsec.String
 import qualified Text.Megaparsec.Lexer as Lex
+
+data Command
+  = Assume Name (Term Name)
+  | Define Name (Term Name)
+  | Eval (Term Name)
+  | Check (Term Name)
+  | Context
+  deriving (Show)
+
+parseCommand :: String -> Either String Command
+parseCommand input = left parseErrorPretty $ parse (commandParser <* eof) "REPL" input
+
+commandParser :: Parser Command
+commandParser =
+  assumption <|>
+  definition <|>
+  keyword "Eval" *> (Eval <$> termParser) <|>
+  keyword "Check" *> (Check <$> termParser) <|>
+  Context <$ keyword "Context"
+
+definition :: Parser Command
+definition = do
+  keyword "Define"
+  v <- name
+  keyword ":="
+  body <- termParser
+  pure (Define v body)
+
+assumption :: Parser Command
+assumption = do
+  keyword "Assume"
+  v <- name
+  keyword ":"
+  ty <- termParser
+  pure (Assume v ty)
 
 space :: Parser ()
 space = Lex.space (void spaceChar) (Lex.skipLineComment "--") (Lex.skipBlockComment "{-" "-}")
