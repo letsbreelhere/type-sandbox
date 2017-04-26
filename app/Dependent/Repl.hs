@@ -52,5 +52,3 @@ processCommand cxt defns Context = do
 
 applyLet :: (Name, Term Name, Term Name) -> Term Name -> Term Name
 applyLet (v, ty, t') t = App (Lambda v ty t) t'
-{-ty <- typeCheck [] parsed-}
-{-pure $ show (eval parsed) ++ " has type " ++ show ty-}
