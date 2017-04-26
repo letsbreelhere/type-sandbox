@@ -77,5 +77,5 @@ substitute x r = \case
 
 betaReduce :: (Variable a) => Term a -> Term a
 betaReduce l = case l of
-  App (Lambda x _ t) s -> substitute x s t
+  App (Lambda x _ t) s -> betaReduce (substitute x (eval s) (eval t))
   _ -> l

@@ -25,7 +25,6 @@ processCommand cxt defns (Eval term) = do
   pure $ case typeCheck curCxt term of
     Left err -> err
     Right _ ->
-      -- TODO: this doesn't seem to be evaluating?
       let letBoundTerm = foldr applyLet term curDefns
        in show $ eval letBoundTerm
 processCommand cxt _ (Check term) = do
