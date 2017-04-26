@@ -1,3 +1,7 @@
 module Types.Variable where
 
-type Variable v = (Eq v, Ord v, Enum v, Show v)
+class Fresh a where
+  fresh :: a -> a
+  begin :: a
+
+type Variable v = (Eq v, Ord v, Fresh v, Show v)

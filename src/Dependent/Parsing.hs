@@ -4,7 +4,7 @@ import Control.Arrow (left)
 import Control.Monad
 import Data.String (fromString)
 import Dependent.Types
-import Types.Name
+import Types.Name (Name)
 import Text.Megaparsec hiding (space)
 import Text.Megaparsec.Expr
 import Text.Megaparsec.String
@@ -64,7 +64,7 @@ parens :: Parser a -> Parser a
 parens p = keyword "(" *> p <* keyword ")"
 
 name :: Parser Name
-name = fmap fromString . lexeme $ some lowerChar
+name = fmap fromString . lexeme $ some (lowerChar <|> upperChar)
 
 parseTerm :: String -> Either String (Term Name)
 parseTerm input = left parseErrorPretty $ parse (termParser <* eof) "REPL" input

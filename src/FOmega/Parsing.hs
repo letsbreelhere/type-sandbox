@@ -28,37 +28,37 @@ dot = keyword "."
 parens :: Parser a -> Parser a
 parens p = keyword "(" *> p <* keyword ")"
 
-parseTerm :: String -> Either String (Lam CapName Name)
+parseTerm :: String -> Either String (Lam Name Name)
 parseTerm input = left parseErrorPretty $ parse (termParser <* eof) "REPL" input
 
-parseType :: String -> Either String (LamType CapName)
+parseType :: String -> Either String (LamType Name)
 parseType input = left parseErrorPretty $ parse (typeParser <* eof) "REPL" input
 
 name :: Parser Name
-name = fmap fromString . lexeme $ some lowerChar
+name = fmap fromString . lexeme $ (:) <$> lowerChar <*> many (lowerChar <|> upperChar)
 
-capName :: Parser CapName
-capName = fmap fromString . lexeme $ some upperChar
+capName :: Parser Name
+capName = fmap fromString . lexeme $ (:) <$> upperChar <*> many (lowerChar <|> upperChar)
 
 kindTable :: [[Operator Parser Kind]]
 kindTable = [ [ infixR "->" KArr ] ]
 
-typeTable :: [[Operator Parser (LamType CapName)]]
+typeTable :: [[Operator Parser (LamType Name)]]
 typeTable = [ [ InfixL (KApp <$ space) ]
             , [ infixR "->" TArr ]
             ]
 
-termTable :: [[Operator Parser (Lam CapName Name)]]
+termTable :: [[Operator Parser (Lam Name Name)]]
 termTable = [ [ Postfix (PairFirst <$ keyword ".1"), Postfix (PairSecond <$ keyword ".2"), InfixL (App <$ space), Postfix (flip AppTy <$> appTy) ] ]
   where appTy = keyword "[" *> typeParser <* keyword "]"
 
 infixR :: String -> (a -> a -> a) -> Operator Parser a
 infixR k f = InfixR (f <$ keyword k)
 
-termParser :: Parser (Lam CapName Name)
+termParser :: Parser (Lam Name Name)
 termParser = makeExprParser termInner termTable
 
-termInner :: Parser (Lam CapName Name)
+termInner :: Parser (Lam Name Name)
 termInner =
   lambda <|>
   bind <|>
@@ -72,7 +72,7 @@ termInner =
   Var <$> name <|>
   parens termParser
 
-pair :: Parser (Lam CapName Name)
+pair :: Parser (Lam Name Name)
 pair = do
   keyword "<"
   l <- termParser
@@ -81,7 +81,7 @@ pair = do
   keyword ">"
   pure (MkPair l r)
 
-bind :: Parser (Lam CapName Name)
+bind :: Parser (Lam Name Name)
 bind = do
   keyword "bind"
   tvs <- sepBy1 tvWithSig comma
@@ -89,7 +89,7 @@ bind = do
   body <- termParser
   pure $ foldr (\(tv, k) e -> AbsTy tv k e) body tvs
 
-impl :: Parser (Lam CapName Name)
+impl :: Parser (Lam Name Name)
 impl = do
   keyword "{*"
   ty <- typeParser
@@ -100,7 +100,7 @@ impl = do
   ty' <- typeParser
   pure (ImplEx ty l ty')
 
-useEx :: Parser (Lam CapName Name)
+useEx :: Parser (Lam Name Name)
 useEx = do
   keyword "let"
   keyword "{"
@@ -114,14 +114,14 @@ useEx = do
   inTerm <- termParser
   pure (UseEx tv v implTerm inTerm)
 
-termSig :: Parser (Name, LamType CapName)
+termSig :: Parser (Name, LamType Name)
 termSig = do
   v <- name
   keyword ":"
   ty <- typeParser
   pure (v, ty)
 
-lambda :: Parser (Lam CapName Name)
+lambda :: Parser (Lam Name Name)
 lambda = do
   keyword "lambda"
   vars <- sepBy1 termSig comma
@@ -132,10 +132,10 @@ lambda = do
 kindParser :: Parser Kind
 kindParser = makeExprParser (Proper <$ keyword "*" <|> parens kindParser) kindTable <?> "kind signature"
 
-typeParser :: Parser (LamType CapName)
+typeParser :: Parser (LamType Name)
 typeParser = makeExprParser typeInner typeTable <?> "expression"
 
-typeInner :: Parser (LamType CapName)
+typeInner :: Parser (LamType Name)
 typeInner =
   BoolTy <$ keyword "bool" <|>
   UnitTy <$ keyword "unit" <|>
@@ -146,7 +146,7 @@ typeInner =
   TVar <$> capName <|>
   parens typeParser
 
-pairType :: Parser (LamType CapName)
+pairType :: Parser (LamType Name)
 pairType = do
   keyword "<"
   l <- typeParser
@@ -155,27 +155,27 @@ pairType = do
   keyword ">"
   pure $ Pair l r
 
-tvWithSig :: Parser (CapName, Kind)
+tvWithSig :: Parser (Name, Kind)
 tvWithSig = do
   tv <- capName
   keyword "::"
   k <- kindParser
   pure (tv, k)
 
-tvBinder :: String -> Parser [(CapName, Kind)]
+tvBinder :: String -> Parser [(Name, Kind)]
 tvBinder kw = keyword kw *> sepBy1 tvWithSig comma <* dot
 
-typeAbstraction :: String -> (CapName -> Kind -> LamType CapName -> LamType CapName) -> Parser (LamType CapName)
+typeAbstraction :: String -> (Name -> Kind -> LamType Name -> LamType Name) -> Parser (LamType Name)
 typeAbstraction kw q = do
   tvs <- tvBinder kw
   ty <- typeParser
   pure $ foldr (\(tv, k) acc -> q tv k acc) ty tvs
 
-kLam :: Parser (LamType CapName)
+kLam :: Parser (LamType Name)
 kLam = typeAbstraction "with" KLam
 
-forAll :: Parser (LamType CapName)
+forAll :: Parser (LamType Name)
 forAll = typeAbstraction "forall" Forall
 
-exists :: Parser (LamType CapName)
+exists :: Parser (LamType Name)
 exists = typeAbstraction "exists" Exists

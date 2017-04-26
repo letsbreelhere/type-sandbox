@@ -1,61 +1,29 @@
 module Types.Name where
 
-import Control.Monad (replicateM)
-import Data.Maybe (fromMaybe)
-import Data.Char (toUpper, toLower)
-import Data.List (elemIndex)
 import Data.String
+import Types.Variable
 
-newtype CapName = CapName Int
-  deriving (Eq, Ord)
+data Name
+  = BaseName String
+  | SuccName String Int
+  deriving (Eq)
 
-instance Enum CapName where
-  toEnum = CapName
-  fromEnum (CapName n) = n
-
-instance IsString CapName where
-  fromString n = fromMaybe (error "fromString") (CapName <$> elemIndex (map toLower n) names)
-
-instance Show CapName where
-  show (CapName n) = map toUpper (names !! n)
-
-newtype Name = Name Int
-  deriving (Eq, Ord)
-
-names :: [String]
-names = concatMap (`replicateM` (['a'..'z'] ++ "_")) [1..]
-
-instance Enum Name where
-  toEnum = Name
-  fromEnum (Name n) = n
-
-instance IsString Name where
-  fromString n = fromMaybe (error "fromString") (Name <$> elemIndex n names)
+instance Fresh Name where
+  fresh (BaseName s) = SuccName s 1
+  fresh (SuccName s n) = SuccName s (n + 1)
+  begin = BaseName "x"
 
 instance Show Name where
-  show (Name n) = names !! n
+  show (BaseName s) = s
+  show (SuccName s k) = s ++ show k
 
-newtype TyName = TyName Int
-  deriving (Eq, Ord)
+instance Ord Name where
+  BaseName s <= BaseName s' = s <= s'
+  SuccName s _ <= BaseName s' = s <= s'
+  BaseName s <= SuccName s' _ = s <= s'
+  SuccName s n <= SuccName s' n'
+    | s == s' = n <= n'
+    | otherwise = s <= s'
 
-tyNames :: [String]
-tyNames = concatMap (`replicateM` ['α'..'ω']) [1..]
-
-instance Enum TyName where
-  toEnum = TyName
-  fromEnum (TyName n) = n
-
-instance IsString TyName where
-  fromString n = fromMaybe (error "fromString") (TyName <$> elemIndex n tyNames)
-
-instance Show TyName where
-  show (TyName n) = tyNames !! n
-
-alpha :: TyName
-alpha = TyName 0
-
-beta :: TyName
-beta = TyName 1
-
-gamma :: TyName
-gamma = TyName 2
+instance IsString Name where
+  fromString = BaseName

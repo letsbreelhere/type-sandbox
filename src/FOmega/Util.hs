@@ -3,8 +3,8 @@ module FOmega.Util where
 import FOmega.Types
 import Types.Variable
 
-varMax :: (Foldable t, Ord a, Enum a) => t a -> a
-varMax = foldr max (toEnum 0)
+varMax :: (Foldable t, Ord a, Fresh a) => t a -> a
+varMax = foldr max begin
 
 rename :: (Functor f, Variable v) => f v -> (v, v) -> f v
 rename fv (v, v') = fmap (\x -> if x == v then v' else x) fv
@@ -19,7 +19,7 @@ freshen
   -> a
   -> (a, f a)
 freshen inner outer oldVar =
-  let freshVar = succ (max (varMax outer) (varMax inner))
+  let freshVar = fresh (max (varMax outer) (varMax inner))
       outer' = rename outer (oldVar, freshVar)
    in (freshVar, outer')
 
