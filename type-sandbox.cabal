@@ -26,13 +26,16 @@ executable fomega
   ghc-options: -Wall
   build-depends:
       base >= 4.7 && < 5
-    , free
-    , recursion-schemes
-    , haskeline
-    , megaparsec
-    , text
     , containers
+    , free
+    , haskeline
+    , lens
+    , megaparsec
+    , recursion-schemes
+    , text
+    , mtl
   other-modules:
+      Dependent.Command
       Dependent.Parsing
       Dependent.TypeCheck
       Dependent.Types
@@ -71,13 +74,16 @@ executable pi-repl
   ghc-options: -Wall
   build-depends:
       base >= 4.7 && < 5
-    , free
-    , recursion-schemes
-    , haskeline
-    , megaparsec
-    , text
     , containers
+    , free
+    , haskeline
+    , lens
+    , megaparsec
+    , recursion-schemes
+    , text
+    , mtl
   other-modules:
+      Dependent.Command
       Dependent.Parsing
       Dependent.TypeCheck
       Dependent.Types
