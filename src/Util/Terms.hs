@@ -1,6 +1,7 @@
 -- Misc. helper functions for terms.
 module Util.Terms where
 
+import Control.Monad (replicateM)
 import Types.Variable
 
 varMax :: (Foldable t, Ord a, Fresh a) => t a -> a
@@ -22,3 +23,6 @@ freshen inner outer oldVar =
   let freshVar = fresh (max (varMax outer) (varMax inner))
       outer' = rename outer (oldVar, freshVar)
    in (freshVar, outer')
+
+prettyVars :: [String]
+prettyVars = concatMap (`replicateM` ['a'..'z']) [1..]

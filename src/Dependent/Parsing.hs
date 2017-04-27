@@ -7,14 +7,6 @@ import Text.Megaparsec hiding (space)
 import Text.Megaparsec.Expr
 import Text.Megaparsec.String
 
-data Command
-  = Assume Name (Term Name)
-  | Define Name (Term Name)
-  | Eval (Term Name)
-  | Check (Term Name)
-  | Context
-  deriving (Show)
-
 parseCommand :: String -> Either String Command
 parseCommand = replParse commandParser
 

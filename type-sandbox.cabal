@@ -56,6 +56,7 @@ executable fomega
       Types.Variable
       Untyped.Eval
       Untyped.Types
+      Util.Beautify
       Util.Repl
       Util.Terms
       Dependent.Repl
@@ -100,6 +101,7 @@ executable pi-repl
       Types.Variable
       Untyped.Eval
       Untyped.Types
+      Util.Beautify
       Util.Repl
       Util.Terms
       FOmega.Repl

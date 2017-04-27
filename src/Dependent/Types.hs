@@ -1,9 +1,10 @@
 module Dependent.Types where
 
 import Data.List (intercalate)
+import Types.Name
 
-data Term a =
-    Type Int
+data Term a
+  = Type Int
   | Unit
   | UnitTy
   | Bool Bool
@@ -13,6 +14,13 @@ data Term a =
   | Pi a (Term a) (Term a)
   | Lambda a (Term a) (Term a)
   deriving (Functor, Foldable, Eq)
+
+data Command
+  = Assume Name (Term Name)
+  | Define Name (Term Name)
+  | Eval (Term Name)
+  | Check (Term Name)
+  | Context
 
 arrPrec :: Int
 arrPrec = 10

@@ -6,7 +6,12 @@ import Dependent.Parsing
 import Dependent.TypeCheck
 import Dependent.Types (Term(..))
 import Types.Name
+import qualified Util.Beautify as U
 import Util.Repl
+import Util.Terms
+
+beautify :: Term Name -> Term Name
+beautify = U.beautify (map BaseName prettyVars)
 
 main :: IO ()
 main = do
@@ -28,7 +33,7 @@ processCommand cxt defns (Eval term) = do
     Left err -> err
     Right _ ->
       let letBoundTerm = foldr applyLet term curDefns
-       in show $ eval letBoundTerm
+       in show $ beautify (eval letBoundTerm)
 processCommand cxt defns (Check term) = do
   curCxt <- readIORef cxt
   curDefns <- map (\(n, ty, _) -> (n, ty)) <$> readIORef defns
