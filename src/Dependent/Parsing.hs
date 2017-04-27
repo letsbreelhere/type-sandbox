@@ -29,7 +29,7 @@ commandParser =
 definition :: Parser Command
 definition = do
   keyword "Define"
-  v <- name
+  v <- name <|> capName
   keyword ":="
   body <- termParser
   pure (Define v body)
@@ -55,12 +55,12 @@ termInner =
   Unit <$ keyword "unit" <|>
   UnitTy <$ keyword "Unit" <|>
   Type 0 <$ keyword "Type" <|>
-  Var <$> name <|>
+    Var <$> (name <|> capName) <|>
   parens termParser
 
 termSig :: Parser (Name, Term Name)
 termSig = do
-  v <- name
+  v <- name <|> capName
   keyword ":"
   ty <- termParser
   pure (v, ty)

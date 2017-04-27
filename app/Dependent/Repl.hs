@@ -21,15 +21,19 @@ replLoop cxt defns = repl "π> " $
 processCommand :: IORef [(Name, Term Name)] -> IORef [(Name, Term Name, Term Name)] -> Command -> IO String
 processCommand cxt defns (Eval term) = do
   curCxt <- readIORef cxt
+  defnCxt <- map (\(n, ty, _) -> (n, ty)) <$> readIORef defns
+  let fullCxt = curCxt ++ defnCxt
   curDefns <- reverse <$> readIORef defns
-  pure $ case typeCheck curCxt term of
+  pure $ case typeCheck fullCxt term of
     Left err -> err
     Right _ ->
       let letBoundTerm = foldr applyLet term curDefns
        in show $ eval letBoundTerm
-processCommand cxt _ (Check term) = do
+processCommand cxt defns (Check term) = do
   curCxt <- readIORef cxt
-  case typeCheck curCxt term of
+  curDefns <- map (\(n, ty, _) -> (n, ty)) <$> readIORef defns
+  let fullCxt = curCxt ++ curDefns
+  case typeCheck fullCxt term of
     Left err -> pure err
     Right ty -> pure (show ty)
 processCommand cxt _ (Assume n ty) = do
@@ -41,13 +45,12 @@ processCommand cxt defns (Define n term) = do
     Left err -> pure err
     Right ty -> do
       modifyIORef defns ((n, ty, term):)
-      modifyIORef cxt ((n, ty):)
       pure $ "Defined " ++ show n ++ "."
 processCommand cxt defns Context = do
   curCxt <- readIORef cxt
   curDefns <- readIORef defns
   let cxtLines = map (\(name, ty) -> show name ++ " : " ++ show ty) curCxt
-      defnLines = map (\(name, _, term) -> show name ++ " := " ++ show term) curDefns
+      defnLines = map (\(name, ty, term) -> show name ++ " := " ++ show term ++ " : " ++ show ty) curDefns
   pure $ intercalate "\n" $ cxtLines ++ defnLines
 
 applyLet :: (Name, Term Name, Term Name) -> Term Name -> Term Name
