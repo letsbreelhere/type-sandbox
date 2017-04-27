@@ -4,7 +4,12 @@ import SystemF.Types
 
 eval :: (Eq a, Ord a, Enum a) => Lam tv a -> Lam tv a
 eval = \case
-  App l r -> betaReduce (App (eval l) (eval r))
+  App l r ->
+    let l' = eval l
+        r' = eval r
+     in case l' of
+          Abs x _ t -> eval (substitute (x, r') (eval t))
+          _ -> App l' r'
   Abs v ty e -> Abs v ty (eval e)
   Var v -> Var v
   Bool b -> Bool b
@@ -27,8 +32,3 @@ substitute (x, r) = \case
   Unit -> Unit
   AbsTy tv e -> AbsTy tv (substitute (x, r) e)
   AppTy e ty -> AppTy (substitute (x, r) e) ty
-
-betaReduce :: (Eq a, Ord a, Enum a) => Lam tv a -> Lam tv a
-betaReduce l = case l of
-  App (Abs x _ t) s -> substitute (x, s) t
-  _ -> l
