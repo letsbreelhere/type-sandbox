@@ -3,6 +3,7 @@ module FOmega.Eval where
 import FOmega.Types
 import FOmega.Util
 import Types.Variable
+import Util.Terms
 
 eval :: (Variable a, Variable tv) => Lam tv a -> Lam tv a
 eval root = case root of

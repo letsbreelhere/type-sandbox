@@ -2,27 +2,7 @@ module FOmega.Util where
 
 import FOmega.Types
 import Types.Variable
-
-varMax :: (Foldable t, Ord a, Fresh a) => t a -> a
-varMax = foldr max begin
-
-rename :: (Functor f, Variable v) => f v -> (v, v) -> f v
-rename fv (v, v') = fmap (\x -> if x == v then v' else x) fv
-
--- Given two expressions, replace a given variable with one not found in either expression.
--- E.g., `freshen (Abs "x" (Var "x")) (Var "x") "x" (\v e -> Abs v UnitTy e)` = `("y", Abs "y" (Var "y"))`.
--- Used to make substitutions capture-avoiding.
-freshen
-  :: (Variable a, Functor f, Foldable f)
-  => f a
-  -> f a
-  -> a
-  -> (a, f a)
-freshen inner outer oldVar =
-  let freshVar = fresh (max (varMax outer) (varMax inner))
-      outer' = rename outer (oldVar, freshVar)
-   in (freshVar, outer')
-
+import Util.Terms
 
 substitute :: (Variable a) => (a, Lam tv a) -> Lam tv a -> Lam tv a
 substitute (x, r) root = case root of
@@ -74,8 +54,8 @@ applyTVar root p@(tv', ty') = case root of
     applyQuantifier q tv kind ty =
       if tv == tv'
          then q tv kind ty
-         else let (fresh, ty'') = freshen ty' ty tv
-               in q fresh kind (applyTVar ty'' (tv', ty'))
+         else let (freshVar, ty'') = freshen ty' ty tv
+               in q freshVar kind (applyTVar ty'' (tv', ty'))
 
 applyTVarInTerm :: Variable tv => Lam tv a -> (tv, LamType tv) -> Lam tv a
 applyTVarInTerm root pr@(tv', _) = case root of

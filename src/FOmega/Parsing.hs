@@ -1,44 +1,14 @@
-module FOmega.Parsing where
+module FOmega.Parsing (parseTerm) where
 
-import Control.Arrow (left)
-import Control.Monad
-import Data.String (fromString)
+import Parsing.Common
 import FOmega.Types
 import Types.Name
 import Text.Megaparsec hiding (space)
 import Text.Megaparsec.Expr
 import Text.Megaparsec.String
-import qualified Text.Megaparsec.Lexer as Lex
-
-space :: Parser ()
-space = Lex.space (void spaceChar) (Lex.skipLineComment "--") (Lex.skipBlockComment "{-" "-}")
-
-keyword :: String -> Parser ()
-keyword k = void (lexeme (string k) <?> show k)
-
-lexeme :: Parser a -> Parser a
-lexeme = Lex.lexeme space
-
-comma :: Parser ()
-comma = keyword ","
-
-dot :: Parser ()
-dot = keyword "."
-
-parens :: Parser a -> Parser a
-parens p = keyword "(" *> p <* keyword ")"
 
 parseTerm :: String -> Either String (Lam Name Name)
-parseTerm input = left parseErrorPretty $ parse (termParser <* eof) "REPL" input
-
-parseType :: String -> Either String (LamType Name)
-parseType input = left parseErrorPretty $ parse (typeParser <* eof) "REPL" input
-
-name :: Parser Name
-name = fmap fromString . lexeme $ (:) <$> lowerChar <*> many (lowerChar <|> upperChar)
-
-capName :: Parser Name
-capName = fmap fromString . lexeme $ (:) <$> upperChar <*> many (lowerChar <|> upperChar)
+parseTerm = replParse termParser
 
 kindTable :: [[Operator Parser Kind]]
 kindTable = [ [ infixR "->" KArr ] ]

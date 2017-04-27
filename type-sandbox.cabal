@@ -44,6 +44,7 @@ executable fomega
       FOmega.Util
       LambdaOmega.TypeCheck
       LambdaOmega.Types
+      Parsing.Common
       SimplyTyped.Eval
       SimplyTyped.TypeCheck
       SimplyTyped.Types
@@ -56,6 +57,7 @@ executable fomega
       Untyped.Eval
       Untyped.Types
       Util.Repl
+      Util.Terms
       Dependent.Repl
   default-language: Haskell2010
 
@@ -86,6 +88,7 @@ executable pi-repl
       FOmega.Util
       LambdaOmega.TypeCheck
       LambdaOmega.Types
+      Parsing.Common
       SimplyTyped.Eval
       SimplyTyped.TypeCheck
       SimplyTyped.Types
@@ -98,5 +101,6 @@ executable pi-repl
       Untyped.Eval
       Untyped.Types
       Util.Repl
+      Util.Terms
       FOmega.Repl
   default-language: Haskell2010

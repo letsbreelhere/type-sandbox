@@ -2,17 +2,17 @@ module Dependent.TypeCheck where
 
 import Dependent.Types
 import Types.Variable
-
-rename :: (Functor f, Variable v) => f v -> (v, v) -> f v
-rename fv (v, v') = fmap (\x -> if x == v then v' else x) fv
+import Util.Terms
 
 guard :: Bool -> a -> Either a ()
 guard b s = if b then pure () else Left s
 
 eval :: Variable a => Term a -> Term a
-eval = \case
-  App l r -> betaReduce (App (eval l) (eval r))
-  root -> root
+eval (App l r) =
+  case eval l of
+    Lambda x _ t -> eval (substitute x (eval r) (eval t))
+    l' -> App l' (eval r)
+eval root = root
 
 typeCheck :: (Variable a) => [(a, Term a)] -> Term a -> Either String (Term a)
 typeCheck cxt = \case
@@ -54,9 +54,6 @@ equiv (Pi v ty l) (Pi v' ty' r) =
    in ty `equiv` ty'' && l `equiv` r'
 equiv l r = eval l == eval r
 
-varMax :: (Foldable t, Ord a, Fresh a) => t a -> a
-varMax = foldr max begin
-
 substitute :: (Variable a) => a -> Term a -> Term a -> Term a
 substitute x r = \case
   Var x'
@@ -65,17 +62,10 @@ substitute x r = \case
   App s t -> App (substitute x r s) (substitute x r t)
   Lambda y ty t
     | x == y -> Lambda x (substitute x r ty) t
-    | otherwise -> let freshVar = fresh (max (varMax t) (varMax r))
-                       t' = fmap (\v -> if v == y then freshVar else v) t
+    | otherwise -> let (freshVar, t') = freshen r t y
                     in Lambda freshVar (substitute x r ty) (substitute x r t')
   Pi y ty t
     | x == y -> Pi x (substitute x r ty) t
-    | otherwise -> let freshVar = fresh (max (varMax t) (varMax r))
-                       t' = fmap (\v -> if v == y then freshVar else v) t
+    | otherwise -> let (freshVar, t') = freshen r t y
                     in Pi freshVar (substitute x r ty) (substitute x r t')
   root -> root
-
-betaReduce :: (Variable a) => Term a -> Term a
-betaReduce l = case l of
-  App (Lambda x _ t) s -> betaReduce (substitute x (eval s) (eval t))
-  _ -> l

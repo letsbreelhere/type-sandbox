@@ -3,6 +3,7 @@ module FOmega.TypeCheck where
 import FOmega.Types
 import FOmega.Util
 import Types.Variable
+import Util.Terms
 
 guard :: Bool -> a -> Either a ()
 guard b s = if b then pure () else Left s
