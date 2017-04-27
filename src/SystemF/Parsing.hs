@@ -27,9 +27,24 @@ termInner :: Parser (Lam Name Name)
 termInner =
   lambda <|>
   bind <|>
+  caseParser <|>
   Var <$> name <|>
   TyCon <$> capName <|>
   parens termParser
+
+caseParser :: Parser (Lam Name Name)
+caseParser = do
+  keyword "case"
+  t <- Var <$> name
+  keyword "{"
+  clauses <- flip sepBy (keyword "|") $ do
+    tycon <- capName
+    args <- many name
+    keyword "=>"
+    result <- termParser
+    pure (tycon, args, result)
+  keyword "}"
+  pure (Case t clauses)
 
 termSig :: Parser (Name, LamType Name)
 termSig = do
@@ -60,6 +75,7 @@ typeParser = makeExprParser typeInner typeTable <?> "expression"
 typeInner :: Parser (LamType Name)
 typeInner =
   forAll <|>
+  (keyword "@" *> fmap ADT capName) <|>
   TVar <$> capName <|>
   parens typeParser
 

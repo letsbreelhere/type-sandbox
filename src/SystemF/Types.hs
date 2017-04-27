@@ -8,6 +8,7 @@ data AdtDef tv =
 data Lam tv a
   = Var a
   | TyCon tv
+  | Case (Lam tv a) [(tv, [a], Lam tv a)]
   | App (Lam tv a) (Lam tv a)
   | Abs a (LamType tv) (Lam tv a)
   | AbsTy tv (Lam tv a)
@@ -28,7 +29,7 @@ forallPrec :: Int
 forallPrec = 8
 
 instance Show tv => Show (LamType tv) where
-  showsPrec _ (ADT n) = shows n
+  showsPrec _ (ADT n) = showString "@" . shows n
   showsPrec _ (TVar tv) = shows tv
   showsPrec d (Forall tv ty) =
     showParen (d > forallPrec) $

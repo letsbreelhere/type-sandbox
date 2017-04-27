@@ -17,6 +17,7 @@ eval = \case
   TyCon tv -> TyCon tv
   AbsTy tv e -> AbsTy tv e
   AppTy e ty -> AppTy (eval e) ty
+  Case _ _ -> error "Case eval is unimplemented"
 
 substitute :: (Variable a) => (a, Lam tv a) -> Lam tv a -> Lam tv a
 substitute (x, r) = \case

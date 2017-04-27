@@ -1,5 +1,7 @@
 module SystemF.TypeCheck where
 
+import Control.Arrow ((&&&))
+import Control.Monad (forM, guard)
 import SystemF.Types
 import Types.Variable
 import Util.Terms
@@ -8,6 +10,15 @@ typeCheck :: (Variable a, Variable tv) => [AdtDef tv] -> [(tv, LamType tv)] -> [
 typeCheck adts cons cxt = \case
   Var v -> lookup v cxt
   TyCon tv -> lookup tv cons
+  Case inTerm clauses -> do
+    ADT inADT <- typeCheck adts cons cxt inTerm
+    clauseTypes <- forM clauses $ \(tycon, args, result) -> do
+      adtDef <- lookup inADT (map (adtName &&& cases) adts)
+      argTypes <- lookup tycon adtDef
+      let argSigs = zip args argTypes
+      typeCheck adts cons (argSigs ++ cxt) result
+    guard (all (== head clauseTypes) clauseTypes)
+    pure (head clauseTypes)
   Abs v ty e -> do
     resultTy <- typeCheck adts cons ((v,ty):cxt) e
     pure (Arr ty resultTy)

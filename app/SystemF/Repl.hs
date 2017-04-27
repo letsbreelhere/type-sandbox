@@ -27,5 +27,5 @@ tyCons =
 main :: IO ()
 main = repl "F> " $ \input -> pure . either id id $ do
   parsed <- parseTerm input
-  ty <- maybe (Left "Typecheck failed") Right $ typeCheck primitives tyCons [] parsed
-  pure $ show (eval parsed) ++ " has type " ++ show ty
+  ty <- maybe (Right (TVar "[typecheck failed]")) Right $ typeCheck primitives tyCons [] parsed
+  pure $ show parsed ++ " has type " ++ show ty
