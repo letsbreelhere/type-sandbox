@@ -3,12 +3,11 @@ module SimplyTyped.Eval where
 import SimplyTyped.Types
 
 eval :: (Eq a, Ord a, Enum a) => Lam a -> Lam a
-eval expr = case expr of
-  App l r -> betaReduce (App (eval l) (eval r))
-  Abs v ty e -> Abs v ty (eval e)
-  Var v -> Var v
-  Bool b -> Bool b
-  Unit -> Unit
+eval (App l r) =
+  case eval l of
+    Abs x _ t -> eval (substitute x (eval r) (eval t))
+    l' -> App l' (eval r)
+eval root = root
 
 substitute :: (Eq a, Ord a, Enum a) => a -> Lam a -> Lam a -> Lam a
 substitute x r = \case
@@ -23,8 +22,3 @@ substitute x r = \case
                     in Abs freshVar ty (substitute x r t')
   Bool b -> Bool b
   Unit -> Unit
-
-betaReduce :: (Eq a, Ord a, Enum a) => Lam a -> Lam a
-betaReduce l = case l of
-  App (Abs x _ t) s -> substitute x s t
-  _ -> l

@@ -3,10 +3,11 @@ module Untyped.Eval where
 import Untyped.Types
 
 eval :: (Eq a, Ord a, Enum a) => Lam a -> Lam a
-eval expr = case expr of
-  App l r -> betaReduce (App (eval l) (eval r))
-  Abs v e -> Abs v (eval e)
-  Var v -> Var v
+eval (App l r) =
+  case eval l of
+    Abs x t -> eval (substitute x (eval r) (eval t))
+    l' -> App l' (eval r)
+eval root = root
 
 substitute :: (Eq a, Ord a, Enum a) => a -> Lam a -> Lam a -> Lam a
 substitute x r = \case
