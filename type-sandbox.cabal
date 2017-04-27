@@ -53,6 +53,7 @@ executable fomega
       SimplyTyped.Types
       SystemF.Eval
       SystemF.Examples
+      SystemF.Parsing
       SystemF.TypeCheck
       SystemF.Types
       Types.Name
@@ -63,6 +64,7 @@ executable fomega
       Util.Repl
       Util.Terms
       Dependent.Repl
+      SystemF.Repl
   default-language: Haskell2010
 
 executable pi-repl
@@ -101,6 +103,7 @@ executable pi-repl
       SimplyTyped.Types
       SystemF.Eval
       SystemF.Examples
+      SystemF.Parsing
       SystemF.TypeCheck
       SystemF.Types
       Types.Name
@@ -110,5 +113,56 @@ executable pi-repl
       Util.Beautify
       Util.Repl
       Util.Terms
+      FOmega.Repl
+      SystemF.Repl
+  default-language: Haskell2010
+
+executable systemf
+  main-is: SystemF/Repl.hs
+  hs-source-dirs:
+      src
+    , app
+  default-extensions: DeriveFunctor DeriveFoldable DeriveTraversable LambdaCase PatternSynonyms OverloadedStrings NamedFieldPuns ConstraintKinds
+  ghc-options: -Wall
+  build-depends:
+      base >= 4.7 && < 5
+    , containers
+    , free
+    , haskeline
+    , lens
+    , megaparsec
+    , recursion-schemes
+    , text
+    , mtl
+  other-modules:
+      Dependent.Command
+      Dependent.Parsing
+      Dependent.TypeCheck
+      Dependent.Types
+      FOmega.Eval
+      FOmega.Examples
+      FOmega.Parsing
+      FOmega.TypeCheck
+      FOmega.Types
+      FOmega.Util
+      LambdaOmega.TypeCheck
+      LambdaOmega.Types
+      Parsing.Common
+      SimplyTyped.Eval
+      SimplyTyped.TypeCheck
+      SimplyTyped.Types
+      SystemF.Eval
+      SystemF.Examples
+      SystemF.Parsing
+      SystemF.TypeCheck
+      SystemF.Types
+      Types.Name
+      Types.Variable
+      Untyped.Eval
+      Untyped.Types
+      Util.Beautify
+      Util.Repl
+      Util.Terms
+      Dependent.Repl
       FOmega.Repl
   default-language: Haskell2010

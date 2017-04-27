@@ -1,8 +1,10 @@
 module SystemF.Eval where
 
 import SystemF.Types
+import Types.Variable
+import Util.Terms
 
-eval :: (Eq a, Ord a, Enum a) => Lam tv a -> Lam tv a
+eval :: (Variable a) => Lam tv a -> Lam tv a
 eval = \case
   App l r ->
     let l' = eval l
@@ -12,12 +14,11 @@ eval = \case
           _ -> App l' r'
   Abs v ty e -> Abs v ty (eval e)
   Var v -> Var v
-  Bool b -> Bool b
-  Unit -> Unit
+  TyCon tv -> TyCon tv
   AbsTy tv e -> AbsTy tv e
   AppTy e ty -> AppTy (eval e) ty
 
-substitute :: (Eq a, Ord a, Enum a) => (a, Lam tv a) -> Lam tv a -> Lam tv a
+substitute :: (Variable a) => (a, Lam tv a) -> Lam tv a -> Lam tv a
 substitute (x, r) = \case
   Var x'
     | x == x' -> r
@@ -25,10 +26,8 @@ substitute (x, r) = \case
   App s t -> App (substitute (x, r) s) (substitute (x, r) t)
   Abs y ty t
     | x == y -> Abs x ty t
-    | otherwise -> let freshVar = succ (max (maximum t) (maximum r))
-                       t' = fmap (\v -> if v == y then freshVar else v) t
+    | otherwise -> let (freshVar, t') = freshen r t y
                     in Abs freshVar ty (substitute (x, r) t')
-  Bool b -> Bool b
-  Unit -> Unit
+  TyCon tv -> TyCon tv
   AbsTy tv e -> AbsTy tv (substitute (x, r) e)
   AppTy e ty -> AppTy (substitute (x, r) e) ty

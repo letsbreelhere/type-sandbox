@@ -1,5 +1,10 @@
 module SystemF.Types where
 
+data AdtDef tv =
+  AdtDef { adtName :: tv
+         , cases :: [(tv, [LamType tv])]
+         }
+
 data Lam tv a
   = Var a
   | TyCon tv

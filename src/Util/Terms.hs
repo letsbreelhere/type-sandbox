@@ -10,7 +10,7 @@ varMax = foldr max begin
 rename :: (Functor f, Variable v) => f v -> (v, v) -> f v
 rename fv (v, v') = fmap (\x -> if x == v then v' else x) fv
 
--- Given two expressions, replace a given variable with one not found in either expression.
+-- Rename `oldVar` in `outer` such that its new name doesn't occur in `inner`.
 -- E.g., `freshen (Abs "x" (Var "x")) (Var "x") "x" (\v e -> Abs v UnitTy e)` = `("y", Abs "y" (Var "y"))`.
 -- Used to make substitutions capture-avoiding.
 freshen

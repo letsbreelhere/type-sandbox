@@ -43,3 +43,8 @@ executables:
       - src
       - app
     main: Dependent/Repl.hs
+  systemf:
+    source-dirs:
+      - src
+      - app
+    main: SystemF/Repl.hs
