@@ -11,10 +11,3 @@ constructions, as well as playing with subtyping, inference,
 substructural type systems, etc. `F_ω` is currently the most
 fleshed-out and therefore the "prettiest", though plenty of it is just
 hacked together.
-
-TODO:
-
-- [X] Use a saner definition for "freshen-able" type names; the enum
-  definition that exists now is borderline unusable for longer names.
-- [ ] Ensure capture avoidance works as expected at the type level as well
-  as the term level in `F_ω` etc.
