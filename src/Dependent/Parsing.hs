@@ -4,11 +4,27 @@ import Dependent.Types
 import Parsing.Common
 import Types.Name (Name)
 import Text.Megaparsec hiding (space)
-import Text.Megaparsec.Expr
-import Text.Megaparsec.String
 
 parseCommand :: String -> Either String Command
-parseCommand = replParse commandParser
+parseCommand = replParse symbols commandParser
+  where
+    symbols = [ "Eval"
+              , "Check"
+              , "Context"
+              , "Define"
+              , "Assume"
+              , ":="
+              , ":"
+              , "true"
+              , "false"
+              , "Bool"
+              , "Unit"
+              , "unit"
+              , "Type"
+              , "fun"
+              , "=>"
+              , "pi"
+              ]
 
 commandParser :: Parser Command
 commandParser =
@@ -31,14 +47,12 @@ assumption = do
   keyword "Assume"
   uncurry Assume <$> termSig
 
-termTable :: [[Operator Parser (Term Name)]]
-termTable = [ [ InfixL (App <$ space) ] ]
-
 termParser :: Parser (Term Name)
-termParser = makeExprParser termInner termTable
+termParser =
+  try (App <$> factor <*> termParser) <|>
+  factor
 
-termInner :: Parser (Term Name)
-termInner =
+factor =
   lambda <|>
   piType <|>
   Bool True <$ keyword "true" <|>
@@ -47,7 +61,7 @@ termInner =
   Unit <$ keyword "unit" <|>
   UnitTy <$ keyword "Unit" <|>
   Type 0 <$ keyword "Type" <|>
-    Var <$> (name <|> capName) <|>
+  Var <$> (name <|> capName) <|>
   parens termParser
 
 termSig :: Parser (Name, Term Name)

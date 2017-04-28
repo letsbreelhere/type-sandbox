@@ -1,29 +1,48 @@
 module FOmega.Parsing (parseTerm) where
 
-import Parsing.Common
+import Parsing.Common hiding (tokenizer)
+import qualified Parsing.Common as Common
 import FOmega.Types
 import Types.Name
 import Text.Megaparsec hiding (space)
 import Text.Megaparsec.Expr
-import Text.Megaparsec.String
 
 parseTerm :: String -> Either String (Lam Name Name)
-parseTerm = replParse termParser
+parseTerm = replParse symbols termParser
+  where symbols =
+          [ "->"
+          , ","
+          , "."
+          , "("
+          , ")"
+          , "["
+          , "]"
+          , "true"
+          , "false"
+          , "unit"
+          , ".1"
+          , ".2"
+          , "<"
+          , ">"
+          , "bind"
+          , "as"
+          , "{"
+          , "{*"
+          , "}"
+          , "with"
+          , "forall"
+          , "exists"
+          ]
 
 kindTable :: [[Operator Parser Kind]]
 kindTable = [ [ infixR "->" KArr ] ]
 
 typeTable :: [[Operator Parser (LamType Name)]]
-typeTable = [ [ InfixL (KApp <$ space) ]
-            , [ infixR "->" TArr ]
-            ]
+typeTable = [ [ infixR "->" TArr ] ]
 
 termTable :: [[Operator Parser (Lam Name Name)]]
-termTable = [ [ Postfix (PairFirst <$ keyword ".1"), Postfix (PairSecond <$ keyword ".2"), InfixL (App <$ space), Postfix (flip AppTy <$> appTy) ] ]
+termTable = [ [ Postfix (PairFirst <$ keyword ".1"), Postfix (PairSecond <$ keyword ".2"), Postfix (flip AppTy <$> appTy) ] ]
   where appTy = keyword "[" *> typeParser <* keyword "]"
-
-infixR :: String -> (a -> a -> a) -> Operator Parser a
-infixR k f = InfixR (f <$ keyword k)
 
 termParser :: Parser (Lam Name Name)
 termParser = makeExprParser termInner termTable

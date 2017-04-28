@@ -5,20 +5,35 @@ import SystemF.Types
 import Types.Name
 import Text.Megaparsec hiding (space)
 import Text.Megaparsec.Expr
-import Text.Megaparsec.String
 
 parseTerm :: String -> Either String (Lam Name Name)
-parseTerm = replParse termParser
+parseTerm = replParse symbols termParser
+  where
+    symbols = [ "->"
+              , "["
+              , "]"
+              , "case"
+              , "{"
+              , "}"
+              , "("
+              , ")"
+              , "."
+              , ","
+              , "bind"
+              , "lambda"
+              , "@"
+              , "forall"
+              , "|"
+              , "=>"
+              , ":"
+              ]
 
 typeTable :: [[Operator Parser (LamType Name)]]
 typeTable = [ [ infixR "->" Arr ] ]
 
 termTable :: [[Operator Parser (Lam Name Name)]]
-termTable = [ [ InfixL (App <$ space), Postfix (flip AppTy <$> appTy) ] ]
+termTable = [ [ Postfix (flip AppTy <$> appTy) ] ]
   where appTy = keyword "[" *> typeParser <* keyword "]"
-
-infixR :: String -> (a -> a -> a) -> Operator Parser a
-infixR k f = InfixR (f <$ keyword k)
 
 termParser :: Parser (Lam Name Name)
 termParser = makeExprParser termInner termTable

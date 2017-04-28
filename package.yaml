@@ -18,6 +18,7 @@ default-extensions:
   - OverloadedStrings
   - NamedFieldPuns
   - ConstraintKinds
+  - TypeFamilies
 
 dependencies:
   - base >= 4.7 && < 5
@@ -33,6 +34,11 @@ dependencies:
 ghc-options: -Wall
 
 executables:
+  lexer:
+    source-dirs:
+      - src
+      - app
+    main: Lexer.hs
   fomega:
     source-dirs:
       - src
