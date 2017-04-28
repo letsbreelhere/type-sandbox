@@ -40,6 +40,11 @@ termParser = makeExprParser termInner termTable
 
 termInner :: Parser (Lam Name Name)
 termInner =
+  try (App <$> factor <*> termParser) <|>
+  factor
+
+factor :: Parser (Lam Name Name)
+factor =
   lambda <|>
   bind <|>
   caseParser <|>
@@ -50,7 +55,7 @@ termInner =
 caseParser :: Parser (Lam Name Name)
 caseParser = do
   keyword "case"
-  t <- Var <$> name
+  t <- termParser
   keyword "{"
   clauses <- flip sepBy (keyword "|") $ do
     tycon <- capName
