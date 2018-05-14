@@ -5,7 +5,7 @@ the [lambda cube](https://en.wikipedia.org/wiki/Lambda_cube), intended
 mostly as an exercise but also in order to have a canonical reference
 interpretation of how various expressions should typecheck for language
 development elsewhere. Most typing rules are drawn from the definitions
-given in [Types and Programming Languages](https://www.amazon.com/Types-Programming-Languages-MIT-Press);
+given in [Types and Programming Languages](https://www.amazon.com/Types-Programming-Languages-MIT-Press/dp/0262162091/ref=sr_1_1?ie=UTF8&qid=1526259213&sr=8-1&keywords=types+and+programming+languages);
 my (maybe too-ambitious) goal is to work up to the calculus of
 constructions, as well as playing with subtyping, inference,
 substructural type systems, etc. `F_ω` is currently the most
